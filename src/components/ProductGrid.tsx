@@ -4,6 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { ShoppingCart, Recycle, Package, Star } from "lucide-react";
 import { ComboOfferDialog } from "./ComboOfferDialog";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
 
 interface Product {
   id: string;
@@ -13,13 +16,14 @@ interface Product {
   category: string;
   image: string;
   hasRefill: boolean;
-  isPreviouslyPurchased: boolean;
   rewardPoints: number;
 }
 
 export const ProductGrid = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showComboDialog, setShowComboDialog] = useState(false);
+  const { user } = useAuth();
+  const { addToCart } = useCart();
 
   const products: Product[] = [
     {
@@ -30,7 +34,6 @@ export const ProductGrid = () => {
       category: "Home Care",
       image: "/placeholder.svg",
       hasRefill: true,
-      isPreviouslyPurchased: false,
       rewardPoints: 25
     },
     {
@@ -41,7 +44,6 @@ export const ProductGrid = () => {
       category: "Personal Care",
       image: "/placeholder.svg",
       hasRefill: true,
-      isPreviouslyPurchased: true,
       rewardPoints: 20
     },
     {
@@ -52,7 +54,6 @@ export const ProductGrid = () => {
       category: "Personal Care", 
       image: "/placeholder.svg",
       hasRefill: true,
-      isPreviouslyPurchased: false,
       rewardPoints: 15
     },
     {
@@ -63,21 +64,96 @@ export const ProductGrid = () => {
       category: "Kitchen",
       image: "/placeholder.svg",
       hasRefill: true,
-      isPreviouslyPurchased: true,
       rewardPoints: 18
+    },
+    {
+      id: "5",
+      name: "Bamboo Toothbrush",
+      price: 8.99,
+      refillPrice: 6.99,
+      category: "Personal Care",
+      image: "/placeholder.svg",
+      hasRefill: true,
+      rewardPoints: 10
+    },
+    {
+      id: "6",
+      name: "Glass Water Bottle",
+      price: 29.99,
+      refillPrice: 4.99,
+      category: "Beverages",
+      image: "/placeholder.svg",
+      hasRefill: true,
+      rewardPoints: 30
     }
   ];
 
   const handleProductClick = (product: Product) => {
-    if (!product.isPreviouslyPurchased) {
+    if (!user) {
+      toast.error("Please login to purchase products");
+      return;
+    }
+
+    // Check if user has bought this product before
+    const hasPurchased = user.purchaseHistory.some(
+      item => item.productId === product.id && item.type === 'original'
+    );
+
+    if (user.isFirstTime || !hasPurchased) {
       setSelectedProduct(product);
       setShowComboDialog(true);
+    } else {
+      // Show refill option for returning customers
+      handleRefillOption(product);
     }
   };
 
-  const addToCart = (product: Product, isRefill = false) => {
-    // TODO: Implement cart functionality
-    console.log(`Added to cart: ${product.name} ${isRefill ? '(Refill)' : ''}`);
+  const handleRefillOption = (product: Product) => {
+    // For returning customers, show both refill and original options
+    const refillPrice = product.refillPrice;
+    
+    toast.success(
+      <div>
+        <p>Welcome back! Choose your option:</p>
+        <div className="flex gap-2 mt-2">
+          <Button 
+            size="sm" 
+            onClick={() => {
+              addToCart({
+                id: `${product.id}-refill`,
+                productId: product.id,
+                name: `${product.name} (Refill)`,
+                type: 'refill',
+                price: refillPrice,
+                originalPrice: product.price,
+                image: product.image
+              });
+              toast.dismiss();
+            }}
+          >
+            Refill ${refillPrice.toFixed(2)}
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => {
+              addToCart({
+                id: `${product.id}-original`,
+                productId: product.id,
+                name: product.name,
+                type: 'original',
+                price: product.price,
+                image: product.image
+              });
+              toast.dismiss();
+            }}
+          >
+            Original ${product.price.toFixed(2)}
+          </Button>
+        </div>
+      </div>,
+      { duration: 5000 }
+    );
   };
 
   return (
@@ -92,93 +168,116 @@ export const ProductGrid = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <Card 
-                key={product.id} 
-                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shadow-sm"
-                onClick={() => handleProductClick(product)}
-              >
-                <CardHeader className="p-0">
-                  <div className="relative overflow-hidden rounded-t-lg">
-                    <img 
-                      src={product.image} 
-                      alt={product.name}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-3 left-3">
-                      <Badge className="bg-primary/90 text-primary-foreground">
-                        {product.category}
-                      </Badge>
-                    </div>
-                    {product.hasRefill && (
-                      <div className="absolute top-3 right-3">
-                        <Badge variant="secondary" className="bg-green-100 text-green-700">
-                          <Recycle className="h-3 w-3 mr-1" />
-                          Refillable
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => {
+              const hasPurchased = user?.purchaseHistory.some(
+                item => item.productId === product.id && item.type === 'original'
+              );
+
+              return (
+                <Card 
+                  key={product.id} 
+                  className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shadow-sm"
+                  onClick={() => handleProductClick(product)}
+                >
+                  <CardHeader className="p-0">
+                    <div className="relative overflow-hidden rounded-t-lg">
+                      <img 
+                        src={product.image} 
+                        alt={product.name}
+                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 left-3">
+                        <Badge className="bg-primary/90 text-primary-foreground">
+                          {product.category}
                         </Badge>
                       </div>
-                    )}
-                  </div>
-                </CardHeader>
-
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                    {product.name}
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Original:</span>
-                      <span className="font-semibold">${product.price}</span>
+                      {product.hasRefill && (
+                        <div className="absolute top-3 right-3">
+                          <Badge variant="secondary" className="bg-green-100 text-green-700">
+                            <Recycle className="h-3 w-3 mr-1" />
+                            Refillable
+                          </Badge>
+                        </div>
+                      )}
                     </div>
-                    {product.hasRefill && (
+                  </CardHeader>
+
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
+                    
+                    <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Refill:</span>
-                        <span className="font-semibold text-primary">${product.refillPrice}</span>
+                        <span className="text-sm text-muted-foreground">Original:</span>
+                        <span className="font-semibold">${product.price}</span>
                       </div>
-                    )}
-                    <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                      <Star className="h-3 w-3 text-yellow-500" />
-                      <span>+{product.rewardPoints} points</span>
+                      {product.hasRefill && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Refill:</span>
+                          <span className="font-semibold text-primary">${product.refillPrice}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                        <Star className="h-3 w-3 text-yellow-500" />
+                        <span>+{product.rewardPoints} points</span>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
+                  </CardContent>
 
-                <CardFooter className="p-4 pt-0 space-y-2">
-                  {product.isPreviouslyPurchased ? (
-                    <div className="w-full space-y-2">
-                      <Button 
-                        className="w-full bg-primary hover:bg-primary/90"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(product, true);
-                        }}
-                      >
-                        <Package className="h-4 w-4 mr-2" />
-                        Buy Refill - ${product.refillPrice}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="w-full"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(product, false);
-                        }}
-                      >
+                  <CardFooter className="p-4 pt-0 space-y-2">
+                    {hasPurchased ? (
+                      <div className="w-full space-y-2">
+                        <Button 
+                          className="w-full bg-primary hover:bg-primary/90"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart({
+                              id: `${product.id}-refill`,
+                              productId: product.id,
+                              name: `${product.name} (Refill)`,
+                              type: 'refill',
+                              price: product.refillPrice,
+                              originalPrice: product.price,
+                              image: product.image
+                            });
+                            toast.success(`${product.name} refill added to cart!`);
+                          }}
+                        >
+                          <Package className="h-4 w-4 mr-2" />
+                          Buy Refill - ${product.refillPrice}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart({
+                              id: `${product.id}-original`,
+                              productId: product.id,
+                              name: product.name,
+                              type: 'original',
+                              price: product.price,
+                              image: product.image
+                            });
+                            toast.success(`${product.name} added to cart!`);
+                          }}
+                        >
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Buy Original - ${product.price}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
                         <ShoppingCart className="h-4 w-4 mr-2" />
-                        Buy Original - ${product.price}
+                        {user ? 'View Combo Deal' : 'Login to Purchase'}
                       </Button>
-                    </div>
-                  ) : (
-                    <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      View Combo Deal
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            ))}
+                    )}
+                  </CardFooter>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -187,7 +286,6 @@ export const ProductGrid = () => {
         product={selectedProduct}
         open={showComboDialog}
         onOpenChange={setShowComboDialog}
-        onAddToCart={addToCart}
       />
     </>
   );

@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Package, Recycle, Star, Sparkles } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
@@ -12,7 +14,6 @@ interface Product {
   category: string;
   image: string;
   hasRefill: boolean;
-  isPreviouslyPurchased: boolean;
   rewardPoints: number;
 }
 
@@ -20,24 +21,45 @@ interface ComboOfferDialogProps {
   product: Product | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddToCart: (product: Product, isRefill?: boolean, isCombo?: boolean) => void;
 }
 
-export const ComboOfferDialog = ({ product, open, onOpenChange, onAddToCart }: ComboOfferDialogProps) => {
+export const ComboOfferDialog = ({ product, open, onOpenChange }: ComboOfferDialogProps) => {
+  const { addToCart } = useCart();
+  
   if (!product) return null;
 
   const comboPrice = product.price + product.refillPrice;
-  const savings = (product.price * 0.15); // 15% savings on combo
+  const savings = comboPrice * 0.15; // 15% savings on combo
   const finalComboPrice = comboPrice - savings;
   const totalRewardPoints = product.rewardPoints * 2 + 50; // Bonus points for combo
 
   const handleComboAdd = () => {
-    onAddToCart(product, false, true);
+    // Add combo pack to cart
+    addToCart({
+      id: `${product.id}-combo`,
+      productId: product.id,
+      name: `${product.name} + Refill Combo`,
+      type: 'original',
+      price: finalComboPrice,
+      originalPrice: comboPrice,
+      image: product.image
+    });
+    
+    toast.success("Combo pack added to cart! You'll save money and help the environment.");
     onOpenChange(false);
   };
 
   const handleOriginalOnly = () => {
-    onAddToCart(product, false, false);
+    addToCart({
+      id: `${product.id}-original`,
+      productId: product.id,
+      name: product.name,
+      type: 'original',
+      price: product.price,
+      image: product.image
+    });
+    
+    toast.success("Product added to cart!");
     onOpenChange(false);
   };
 

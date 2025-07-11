@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Leaf, Mail, Lock, User, Phone } from "lucide-react";
+import { Leaf, Mail, Lock, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface LoginDialogProps {
   open: boolean;
@@ -12,17 +14,62 @@ interface LoginDialogProps {
 }
 
 export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [signupData, setSignupData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [isLoading, setIsLoading] = useState(false);
+  const { login, signup } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!loginData.email || !loginData.password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
     
-    // TODO: Implement authentication with Supabase
-    setTimeout(() => {
+    setIsLoading(true);
+    try {
+      const success = await login(loginData.email, loginData.password);
+      if (success) {
+        toast.success("Login successful!");
+        onOpenChange(false);
+        setLoginData({ email: "", password: "" });
+      } else {
+        toast.error("Invalid email or password");
+      }
+    } catch (error) {
+      toast.error("Login failed");
+    } finally {
       setIsLoading(false);
-      onOpenChange(false);
-    }, 1000);
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!signupData.name || !signupData.email || !signupData.password || !signupData.confirmPassword) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    if (signupData.password !== signupData.confirmPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const success = await signup(signupData.email, signupData.password, signupData.name);
+      if (success) {
+        toast.success("Account created successfully!");
+        onOpenChange(false);
+        setSignupData({ name: "", email: "", password: "", confirmPassword: "" });
+      } else {
+        toast.error("Email already exists");
+      }
+    } catch (error) {
+      toast.error("Signup failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -47,7 +94,7 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
           </TabsList>
 
           <TabsContent value="login" className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -57,6 +104,8 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
                     type="email" 
                     placeholder="your@email.com" 
                     className="pl-10"
+                    value={loginData.email}
+                    onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                     required 
                   />
                 </div>
@@ -70,6 +119,8 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
                     type="password" 
                     placeholder="••••••••" 
                     className="pl-10"
+                    value={loginData.password}
+                    onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                     required 
                   />
                 </div>
@@ -85,7 +136,7 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
           </TabsContent>
 
           <TabsContent value="signup" className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSignup} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <div className="relative">
@@ -95,6 +146,8 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
                     type="text" 
                     placeholder="Your Name" 
                     className="pl-10"
+                    value={signupData.name}
+                    onChange={(e) => setSignupData({...signupData, name: e.target.value})}
                     required 
                   />
                 </div>
@@ -108,19 +161,8 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
                     type="email" 
                     placeholder="your@email.com" 
                     className="pl-10"
-                    required 
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    id="phone" 
-                    type="tel" 
-                    placeholder="+1 (555) 000-0000" 
-                    className="pl-10"
+                    value={signupData.email}
+                    onChange={(e) => setSignupData({...signupData, email: e.target.value})}
                     required 
                   />
                 </div>
@@ -134,6 +176,23 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
                     type="password" 
                     placeholder="••••••••" 
                     className="pl-10"
+                    value={signupData.password}
+                    onChange={(e) => setSignupData({...signupData, password: e.target.value})}
+                    required 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    id="confirm-password" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    className="pl-10"
+                    value={signupData.confirmPassword}
+                    onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
                     required 
                   />
                 </div>
