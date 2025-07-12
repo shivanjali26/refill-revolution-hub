@@ -2,6 +2,7 @@ import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Droplets, Utensils, Home, Sparkles, Baby, Bath } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const categories = [
   {
@@ -55,6 +56,12 @@ const categories = [
 ];
 
 const Categories = () => {
+  const navigate = useNavigate();
+
+  const handleCategoryClick = (categoryId: string) => {
+    navigate(`/products?category=${categoryId}`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -72,7 +79,11 @@ const Categories = () => {
           {categories.map((category) => {
             const IconComponent = category.icon;
             return (
-              <Card key={category.id} className="hover:shadow-lg transition-shadow cursor-pointer group">
+              <Card 
+                key={category.id} 
+                className="hover:shadow-lg transition-shadow cursor-pointer group"
+                onClick={() => handleCategoryClick(category.id)}
+              >
                 <CardHeader>
                   <div className="flex items-center space-x-4">
                     <div className={`p-3 rounded-lg ${category.color} text-white group-hover:scale-110 transition-transform`}>

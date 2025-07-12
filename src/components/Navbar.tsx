@@ -30,7 +30,7 @@ export const Navbar = () => {
 
             {/* Navigation Links */}
             <div className="hidden md:flex items-center space-x-8">
-              <Link to="/" className="text-foreground/80 hover:text-foreground transition-colors">
+              <Link to="/products" className="text-foreground/80 hover:text-foreground transition-colors">
                 Products
               </Link>
               <Link to="/categories" className="text-foreground/80 hover:text-foreground transition-colors">
