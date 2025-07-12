@@ -10,11 +10,12 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  refillPrice: number;
+  refillPrice?: number;
   category: string;
   image: string;
   hasRefill: boolean;
   rewardPoints: number;
+  brand?: string;
 }
 
 interface ComboOfferDialogProps {
@@ -26,7 +27,7 @@ interface ComboOfferDialogProps {
 export const ComboOfferDialog = ({ product, open, onOpenChange }: ComboOfferDialogProps) => {
   const { addToCart } = useCart();
   
-  if (!product) return null;
+  if (!product || !product.hasRefill || !product.refillPrice) return null;
 
   const comboPrice = product.price + product.refillPrice;
   const savings = comboPrice * 0.15; // 15% savings on combo

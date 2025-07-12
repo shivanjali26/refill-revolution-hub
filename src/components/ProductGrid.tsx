@@ -12,11 +12,12 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  refillPrice: number;
+  refillPrice?: number;
   category: string;
   image: string;
   hasRefill: boolean;
   rewardPoints: number;
+  brand?: string;
 }
 
 export const ProductGrid = () => {

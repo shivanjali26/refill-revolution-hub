@@ -14,11 +14,12 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  refillPrice: number;
+  refillPrice?: number;
   category: string;
   image: string;
   hasRefill: boolean;
   rewardPoints: number;
+  brand: string;
 }
 
 const Products = () => {
@@ -31,95 +32,167 @@ const Products = () => {
   const { addToCart } = useCart();
 
   const products: Product[] = [
+    // Refillable products
     {
       id: "1",
-      name: "Eco Laundry Detergent",
+      name: "Tide Laundry Detergent",
       price: 24.99,
       refillPrice: 18.99,
       category: "cleaning",
       image: "/placeholder.svg",
       hasRefill: true,
-      rewardPoints: 25
+      rewardPoints: 25,
+      brand: "Tide"
     },
     {
       id: "2",
-      name: "Natural Shampoo",
+      name: "Head & Shoulders Shampoo",
       price: 19.99,
       refillPrice: 14.99,
       category: "personal-care",
       image: "/placeholder.svg",
       hasRefill: true,
-      rewardPoints: 20
+      rewardPoints: 20,
+      brand: "Head & Shoulders"
     },
     {
       id: "3",
-      name: "Organic Hand Soap",
+      name: "Dove Hand Soap",
       price: 12.99,
       refillPrice: 8.99,
       category: "personal-care",
       image: "/placeholder.svg",
       hasRefill: true,
-      rewardPoints: 15
+      rewardPoints: 15,
+      brand: "Dove"
     },
     {
       id: "4",
-      name: "Plant-Based Dish Soap",
+      name: "Dawn Dish Soap",
       price: 16.99,
       refillPrice: 11.99,
       category: "kitchen",
       image: "/placeholder.svg",
       hasRefill: true,
-      rewardPoints: 18
+      rewardPoints: 18,
+      brand: "Dawn"
     },
     {
       id: "5",
-      name: "Bamboo Toothbrush",
+      name: "Colgate Toothpaste",
       price: 8.99,
       refillPrice: 6.99,
       category: "personal-care",
       image: "/placeholder.svg",
       hasRefill: true,
-      rewardPoints: 10
+      rewardPoints: 10,
+      brand: "Colgate"
     },
     {
       id: "6",
-      name: "Glass Water Bottle",
+      name: "Brita Water Filter",
       price: 29.99,
       refillPrice: 4.99,
       category: "beverages",
       image: "/placeholder.svg",
       hasRefill: true,
-      rewardPoints: 30
+      rewardPoints: 30,
+      brand: "Brita"
     },
     {
       id: "7",
-      name: "All-Purpose Cleaner",
+      name: "Lysol All-Purpose Cleaner",
       price: 15.99,
       refillPrice: 10.99,
       category: "cleaning",
       image: "/placeholder.svg",
       hasRefill: true,
-      rewardPoints: 16
+      rewardPoints: 16,
+      brand: "Lysol"
     },
     {
       id: "8",
-      name: "Baby Shampoo",
+      name: "Johnson's Baby Shampoo",
       price: 18.99,
       refillPrice: 13.99,
       category: "baby-care",
       image: "/placeholder.svg",
       hasRefill: true,
-      rewardPoints: 19
+      rewardPoints: 19,
+      brand: "Johnson's"
     },
     {
       id: "9",
-      name: "Floor Cleaner",
+      name: "Mr. Clean Floor Cleaner",
       price: 21.99,
       refillPrice: 16.99,
       category: "home-care",
       image: "/placeholder.svg",
       hasRefill: true,
-      rewardPoints: 22
+      rewardPoints: 22,
+      brand: "Mr. Clean"
+    },
+    {
+      id: "10",
+      name: "Febreze Air Freshener",
+      price: 13.99,
+      refillPrice: 9.99,
+      category: "home-care",
+      image: "/placeholder.svg",
+      hasRefill: true,
+      rewardPoints: 14,
+      brand: "Febreze"
+    },
+    // Non-refillable products
+    {
+      id: "11",
+      name: "Nike Memory Foam Pillow",
+      price: 45.99,
+      category: "home-care",
+      image: "/placeholder.svg",
+      hasRefill: false,
+      rewardPoints: 10,
+      brand: "Nike"
+    },
+    {
+      id: "12",
+      name: "Sherpa Fleece Blanket",
+      price: 89.99,
+      category: "home-care",
+      image: "/placeholder.svg",
+      hasRefill: false,
+      rewardPoints: 15,
+      brand: "Home Collection"
+    },
+    {
+      id: "13",
+      name: "Stainless Steel Water Bottle",
+      price: 34.99,
+      category: "beverages",
+      image: "/placeholder.svg",
+      hasRefill: false,
+      rewardPoints: 8,
+      brand: "Hydro Flask"
+    },
+    {
+      id: "14",
+      name: "Bamboo Cutting Board Set",
+      price: 49.99,
+      category: "kitchen",
+      image: "/placeholder.svg",
+      hasRefill: false,
+      rewardPoints: 12,
+      brand: "EcoChef"
+    },
+    {
+      id: "15",
+      name: "Organic Cotton Towel Set",
+      price: 79.99,
+      category: "personal-care",
+      image: "/placeholder.svg",
+      hasRefill: false,
+      rewardPoints: 18,
+      brand: "Luxury Living"
     }
   ];
 
@@ -150,6 +223,20 @@ const Products = () => {
       return;
     }
 
+    // If product is not refillable, just add to cart
+    if (!product.hasRefill) {
+      addToCart({
+        id: `${product.id}-original`,
+        productId: product.id,
+        name: product.name,
+        type: 'original',
+        price: product.price,
+        image: product.image
+      });
+      toast.success(`${product.name} added to cart!`);
+      return;
+    }
+
     const hasPurchased = user.purchaseHistory.some(
       item => item.productId === product.id && item.type === 'original'
     );
@@ -163,7 +250,7 @@ const Products = () => {
   };
 
   const handleRefillOption = (product: Product) => {
-    const refillPrice = product.refillPrice;
+    const refillPrice = product.refillPrice || 0;
     
     toast.success(
       <div>
@@ -182,6 +269,7 @@ const Products = () => {
                 image: product.image
               });
               toast.dismiss();
+              toast.success(`You earned ${product.rewardPoints} reward points!`);
             }}
           >
             Refill ${refillPrice.toFixed(2)}
@@ -280,21 +368,24 @@ const Products = () => {
                 </CardHeader>
 
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                    {product.name}
-                  </h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
+                    <Badge variant="outline" className="text-xs">
+                      {product.brand}
+                    </Badge>
+                  </div>
                   
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Original:</span>
-                      <span className="font-semibold">${product.price}</span>
+                      <span className="text-lg font-bold">${product.price}</span>
+                      {product.hasRefill && (
+                        <span className="text-sm text-green-600">
+                          Refill available from ${product.refillPrice}
+                        </span>
+                      )}
                     </div>
-                    {product.hasRefill && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Refill:</span>
-                        <span className="font-semibold text-primary">${product.refillPrice}</span>
-                      </div>
-                    )}
                     <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                       <Star className="h-3 w-3 text-yellow-500" />
                       <span>+{product.rewardPoints} points</span>
@@ -302,54 +393,20 @@ const Products = () => {
                   </div>
                 </CardContent>
 
-                <CardFooter className="p-4 pt-0 space-y-2">
-                  {hasPurchased ? (
-                    <div className="w-full space-y-2">
-                      <Button 
-                        className="w-full bg-primary hover:bg-primary/90"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart({
-                            id: `${product.id}-refill`,
-                            productId: product.id,
-                            name: `${product.name} (Refill)`,
-                            type: 'refill',
-                            price: product.refillPrice,
-                            originalPrice: product.price,
-                            image: product.image
-                          });
-                          toast.success(`${product.name} refill added to cart!`);
-                        }}
-                      >
-                        <Package className="h-4 w-4 mr-2" />
-                        Buy Refill - ${product.refillPrice}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="w-full"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart({
-                            id: `${product.id}-original`,
-                            productId: product.id,
-                            name: product.name,
-                            type: 'original',
-                            price: product.price,
-                            image: product.image
-                          });
-                          toast.success(`${product.name} added to cart!`);
-                        }}
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Buy Original - ${product.price}
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      {user ? 'View Combo Deal' : 'Login to Purchase'}
-                    </Button>
-                  )}
+                <CardFooter className="p-4 pt-0">
+                  <Button 
+                    className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleProductClick(product);
+                    }}
+                  >
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    {product.hasRefill 
+                      ? (user ? (hasPurchased ? 'Choose Option' : 'View Combo Deal') : 'Login to Purchase')
+                      : 'Add to Cart'
+                    }
+                  </Button>
                 </CardFooter>
               </Card>
             );
