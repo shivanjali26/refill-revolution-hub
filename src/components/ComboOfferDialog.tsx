@@ -66,36 +66,48 @@ export const ComboOfferDialog = ({ product, open, onOpenChange }: ComboOfferDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg animate-fade-in">
         <DialogHeader>
-          <div className="flex items-center space-x-2 mb-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <DialogTitle className="text-xl">Special First-Time Offer!</DialogTitle>
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-primary/10 rounded-full">
+              <Sparkles className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl font-bold">Special First-Time Offer!</DialogTitle>
+              <p className="text-sm text-muted-foreground">Save money and help the environment</p>
+            </div>
           </div>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Product Info */}
-          <div className="flex items-center space-x-4">
-            <img 
-              src={product.image} 
-              alt={product.name}
-              className="w-16 h-16 object-cover rounded-lg"
-            />
+          <div className="flex items-center space-x-4 p-4 bg-muted/30 rounded-xl">
+            <div className="w-20 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-background">
+              <img 
+                src={product.image} 
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div>
-              <h3 className="font-semibold">{product.name}</h3>
-              <Badge variant="secondary" className="text-xs">
+              <h3 className="font-semibold text-lg">{product.name}</h3>
+              <Badge className="badge-primary mt-1">
                 {product.category}
               </Badge>
             </div>
           </div>
 
           {/* Combo Offer */}
-          <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-3">
-              <Package className="h-5 w-5 text-primary" />
-              <h4 className="font-semibold text-primary">Combo Deal</h4>
-              <Badge className="bg-green-100 text-green-700 text-xs">
+          <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Package className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-primary text-lg">Combo Deal</h4>
+                <p className="text-sm text-muted-foreground">Best value for first-time buyers</p>
+              </div>
+              <Badge className="badge-success ml-auto">
                 Save ${savings.toFixed(2)}
               </Badge>
             </div>
@@ -132,19 +144,25 @@ export const ComboOfferDialog = ({ product, open, onOpenChange }: ComboOfferDial
           </div>
 
           {/* Benefits */}
-          <div className="space-y-3">
-            <h5 className="font-medium">Why choose the combo?</h5>
-            <div className="grid grid-cols-1 gap-2 text-sm">
-              <div className="flex items-center space-x-2">
-                <Recycle className="h-4 w-4 text-green-600" />
+          <div className="space-y-4">
+            <h5 className="font-semibold text-lg">Why choose the combo?</h5>
+            <div className="grid grid-cols-1 gap-3 text-sm">
+              <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                <div className="p-1 bg-green-100 rounded-full">
+                  <Recycle className="h-4 w-4 text-green-600" />
+                </div>
                 <span>Ready for your first refill when you need it</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <Star className="h-4 w-4 text-yellow-500" />
+              <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
+                <div className="p-1 bg-yellow-100 rounded-full">
+                  <Star className="h-4 w-4 text-yellow-500" />
+                </div>
                 <span>Double reward points + bonus points</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <Sparkles className="h-4 w-4 text-purple-600" />
+              <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
+                <div className="p-1 bg-purple-100 rounded-full">
+                  <Sparkles className="h-4 w-4 text-purple-600" />
+                </div>
                 <span>15% savings compared to buying separately</span>
               </div>
             </div>
@@ -153,7 +171,7 @@ export const ComboOfferDialog = ({ product, open, onOpenChange }: ComboOfferDial
           {/* Action Buttons */}
           <div className="space-y-3">
             <Button 
-              className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+              className="btn-primary w-full"
               onClick={handleComboAdd}
             >
               Add Combo to Cart - ${finalComboPrice.toFixed(2)}
@@ -161,7 +179,7 @@ export const ComboOfferDialog = ({ product, open, onOpenChange }: ComboOfferDial
             
             <Button 
               variant="outline" 
-              className="w-full"
+              className="btn-secondary w-full"
               onClick={handleOriginalOnly}
             >
               Just the Original - ${product.price}

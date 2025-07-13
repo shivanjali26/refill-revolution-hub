@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { ShoppingCart, Recycle, Package, Star } from "lucide-react";
 import { ComboOfferDialog } from "./ComboOfferDialog";
+import { TopPopups } from "./TopPopups";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
@@ -23,6 +24,8 @@ interface Product {
 export const ProductGrid = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showComboDialog, setShowComboDialog] = useState(false);
+  const [showRefillDialog, setShowRefillDialog] = useState(false);
+  const [showChooseOption, setShowChooseOption] = useState(false);
   const { user } = useAuth();
   const { addToCart } = useCart();
 
@@ -105,60 +108,55 @@ export const ProductGrid = () => {
       setShowComboDialog(true);
     } else {
       // Show refill option for returning customers
-      handleRefillOption(product);
+      setSelectedProduct(product);
+      setShowRefillDialog(true);
     }
   };
 
-  const handleRefillOption = (product: Product) => {
-    // For returning customers, show both refill and original options
-    const refillPrice = product.refillPrice;
+  const handleAddToCart = (productId: string, type: 'refill' | 'original') => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    if (type === 'refill') {
+      addToCart({
+        id: `${productId}-refill`,
+        productId: productId,
+        name: `${product.name} (Refill)`,
+        type: 'refill',
+        price: product.refillPrice,
+        originalPrice: product.price,
+        image: product.image
+      });
+    } else {
+      addToCart({
+        id: `${productId}-original`,
+        productId: productId,
+        name: product.name,
+        type: 'original',
+        price: product.price,
+        image: product.image
+      });
+    }
     
-    toast.success(
-      <div>
-        <p>Welcome back! Choose your option:</p>
-        <div className="flex gap-2 mt-2">
-          <Button 
-            size="sm" 
-            onClick={() => {
-              addToCart({
-                id: `${product.id}-refill`,
-                productId: product.id,
-                name: `${product.name} (Refill)`,
-                type: 'refill',
-                price: refillPrice,
-                originalPrice: product.price,
-                image: product.image
-              });
-              toast.dismiss();
-            }}
-          >
-            Refill ${refillPrice.toFixed(2)}
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={() => {
-              addToCart({
-                id: `${product.id}-original`,
-                productId: product.id,
-                name: product.name,
-                type: 'original',
-                price: product.price,
-                image: product.image
-              });
-              toast.dismiss();
-            }}
-          >
-            Original ${product.price.toFixed(2)}
-          </Button>
-        </div>
-      </div>,
-      { duration: 5000 }
-    );
+    // The TopPopups component will automatically detect cart changes and show alerts
   };
 
   return (
     <>
+      <TopPopups
+        selectedProduct={selectedProduct}
+        showComboDialog={showComboDialog}
+        showRefillDialog={showRefillDialog}
+        showChooseOption={showChooseOption}
+        onComboClose={() => setShowComboDialog(false)}
+        onRefillClose={() => setShowRefillDialog(false)}
+        onChooseOptionClose={() => setShowChooseOption(false)}
+        onAddToCart={handleAddToCart}
+        onChooseOption={(product) => {
+          // This will be handled by the TopPopups component internally
+        }}
+      />
+
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -229,46 +227,17 @@ export const ProductGrid = () => {
 
                   <CardFooter className="p-4 pt-0 space-y-2">
                     {hasPurchased ? (
-                      <div className="w-full space-y-2">
-                        <Button 
-                          className="w-full bg-primary hover:bg-primary/90"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToCart({
-                              id: `${product.id}-refill`,
-                              productId: product.id,
-                              name: `${product.name} (Refill)`,
-                              type: 'refill',
-                              price: product.refillPrice,
-                              originalPrice: product.price,
-                              image: product.image
-                            });
-                            toast.success(`${product.name} refill added to cart!`);
-                          }}
-                        >
-                          <Package className="h-4 w-4 mr-2" />
-                          Buy Refill - ${product.refillPrice}
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          className="w-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToCart({
-                              id: `${product.id}-original`,
-                              productId: product.id,
-                              name: product.name,
-                              type: 'original',
-                              price: product.price,
-                              image: product.image
-                            });
-                            toast.success(`${product.name} added to cart!`);
-                          }}
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          Buy Original - ${product.price}
-                        </Button>
-                      </div>
+                      <Button 
+                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProduct(product);
+                          setShowChooseOption(true);
+                        }}
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Choose Option
+                      </Button>
                     ) : (
                       <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
                         <ShoppingCart className="h-4 w-4 mr-2" />
@@ -282,12 +251,6 @@ export const ProductGrid = () => {
           </div>
         </div>
       </section>
-
-      <ComboOfferDialog 
-        product={selectedProduct}
-        open={showComboDialog}
-        onOpenChange={setShowComboDialog}
-      />
     </>
   );
 };

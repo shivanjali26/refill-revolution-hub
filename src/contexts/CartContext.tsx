@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
+import { useAuth } from "./AuthContext";
 
 interface CartItem {
   id: string;
@@ -33,6 +34,7 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const { addPurchase } = useAuth();
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     setItems(prev => {
@@ -45,6 +47,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         );
       }
       return [...prev, { ...item, quantity: 1 }];
+    });
+
+    // Track purchase for reward points
+    addPurchase({
+      productId: item.productId,
+      productName: item.name,
+      type: item.type,
+      quantity: 1,
+      price: item.price
     });
   };
 

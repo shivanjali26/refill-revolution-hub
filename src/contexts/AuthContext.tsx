@@ -124,7 +124,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const updatedHistory = [...user.purchaseHistory, newPurchase];
-    const pointsEarned = purchase.type === 'refill' ? 20 : 10;
+    
+    // Calculate reward points based on product type and purchase type
+    let pointsEarned = 0;
+    if (purchase.type === 'refill') {
+      // Refill purchases earn more points
+      pointsEarned = Math.floor(purchase.price * 2); // 2 points per dollar for refills
+    } else {
+      // Original product purchases earn standard points
+      pointsEarned = Math.floor(purchase.price); // 1 point per dollar for originals
+    }
     
     updateUser({
       purchaseHistory: updatedHistory,
